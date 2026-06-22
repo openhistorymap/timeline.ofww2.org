@@ -25,7 +25,7 @@ def query(war):
   {{ ?item wdt:P361 wd:{war} . }}                 # part of the war
   UNION {{ wd:{war} wdt:P828 ?item . }}           # the war's causes
   UNION {{ wd:{war} wdt:P1478 ?item . }}          # the war's immediate cause
-  UNION {{ ?item wdt:P1542 wd:{war} . }}          # events whose effect is the war
+  UNION {{ ?item wdt:P1542 wd:{war} . }}          # events whose effect is the war (e.g. the assassination)
   ?item wdt:P31 ?class .
   OPTIONAL {{ ?item wdt:P585 ?pit. }}
   OPTIONAL {{ ?item wdt:P580 ?st. }}
@@ -52,11 +52,26 @@ def parse_year(s):
     return round(sign * y + frac, 6)
 
 
-def run(war):
-    url = WDQS + "?" + urllib.parse.urlencode({"query": query(war), "format": "json"})
+def causes_query(war):
+    # Tiny companion query: just the QIDs of the war's causes / igniting events.
+    # (Kept separate so the main query stays fast — folding this in times WDQS out.)
+    return f"""SELECT ?item WHERE {{
+  {{ wd:{war} wdt:P828 ?item . }}
+  UNION {{ wd:{war} wdt:P1478 ?item . }}
+  UNION {{ ?item wdt:P1542 wd:{war} . }}
+}}"""
+
+
+def fetch(q):
+    url = WDQS + "?" + urllib.parse.urlencode({"query": q, "format": "json"})
     req = urllib.request.Request(url, headers={"Accept": "application/sparql-results+json", "User-Agent": UA})
     with urllib.request.urlopen(req, timeout=120) as r:
-        bindings = json.load(r)["results"]["bindings"]
+        return json.load(r)["results"]["bindings"]
+
+
+def run(war):
+    bindings = fetch(query(war))
+    cause_ids = {(b.get("item") or {}).get("value", "").rsplit("/", 1)[-1] for b in fetch(causes_query(war))}
     out, seen = [], set()
     for b in bindings:
         uri = (b.get("item") or {}).get("value", "")
@@ -74,9 +89,14 @@ def run(war):
             ev["description"] = cls
         if uri:
             ev["url"] = uri
+        data = {}
         country = (b.get("countryLabel") or {}).get("value")
         if country and not re.match(r"^Q\d+$", country):
-            ev["data"] = {"country": country}
+            data["country"] = country
+        if qid in cause_ids:
+            data["cause"] = True
+        if data:
+            ev["data"] = data
         out.append(ev)
     return out
 

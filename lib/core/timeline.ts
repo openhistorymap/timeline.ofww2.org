@@ -171,7 +171,10 @@ export class Timeline {
   private hoveredEra: number | null = null;
   private hoveredEvent: string | null = null;
   /* Marker element refs, so hover highlights toggle in place (no re-render → no flicker). */
-  private eventMarkers = new Map<string, { el: SVGElement; span: boolean; colored: boolean }>();
+  private eventMarkers = new Map<
+    string,
+    { el: SVGElement; span: boolean; colored: boolean; r: number; emph: boolean }
+  >();
   private eraMarkers = new Map<number, SVGElement[]>();
 
   /* interaction state */
@@ -760,6 +763,7 @@ export class Timeline {
     if (x1 - x0 < MIN_W) x1 = x0 + MIN_W;
     const hovered = this.hoveredEvent === ev.id;
     const plotLeft = this.layout.plotLeft;
+    const emph = ev.emphasis === true;
 
     if (isSpan) {
       const xC = Math.max(plotLeft, x0);
@@ -770,25 +774,26 @@ export class Timeline {
         width: Math.max(1, w),
         height: EVENT_H,
         rx: 2,
-        class: 'timelin-event-span' + (hovered ? ' is-hovered' : ''),
+        class: 'timelin-event-span' + (hovered ? ' is-hovered' : '') + (emph ? ' is-emphasis' : ''),
       });
       if (color) {
         rect.style.fill = color;
-        rect.style.fillOpacity = hovered ? '0.6' : '0.34';
+        rect.style.fillOpacity = hovered || emph ? '0.6' : '0.34';
         rect.style.stroke = color;
       }
-      this.eventMarkers.set(ev.id, { el: rect, span: true, colored: !!color });
+      this.eventMarkers.set(ev.id, { el: rect, span: true, colored: !!color, r: 3, emph });
       this.gEvents.append(rect);
     } else {
       const cx = Math.max(plotLeft, Math.min(this.width, x0));
+      const baseR = emph ? 5 : 3;
       const dot = svgEl('circle', {
         cx,
         cy: yTop + EVENT_H / 2,
-        r: hovered ? 4 : 3,
-        class: 'timelin-event-dot' + (hovered ? ' is-hovered' : ''),
+        r: hovered ? baseR + 1 : baseR,
+        class: 'timelin-event-dot' + (hovered ? ' is-hovered' : '') + (emph ? ' is-emphasis' : ''),
       });
       if (color) dot.style.fill = color;
-      this.eventMarkers.set(ev.id, { el: dot, span: false, colored: !!color });
+      this.eventMarkers.set(ev.id, { el: dot, span: false, colored: !!color, r: baseR, emph });
       this.gEvents.append(dot);
     }
 
@@ -921,9 +926,9 @@ export class Timeline {
     if (!m) return;
     m.el.classList.toggle('is-hovered', on);
     if (m.span) {
-      if (m.colored) m.el.style.fillOpacity = on ? '0.6' : '0.34';
+      if (m.colored) m.el.style.fillOpacity = on || m.emph ? '0.6' : '0.34';
     } else {
-      m.el.setAttribute('r', on ? '4' : '3');
+      m.el.setAttribute('r', String(on ? m.r + 1 : m.r));
     }
   }
 

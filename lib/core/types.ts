@@ -42,6 +42,8 @@ export interface TimelineEvent {
   description?: string;
   /** Optional accent colour (CSS colour string) overriding the group/default brass. */
   color?: string;
+  /** Emphasise this event — a larger, ringed marker that stands out (e.g. a pivotal event). */
+  emphasis?: boolean;
   /**
    * Optional group tag. Events sharing a `group` are drawn together in one
    * horizontal swimlane (see {@link TimelineGroup}). Matches vis-timeline's

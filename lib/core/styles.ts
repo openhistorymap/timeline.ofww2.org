@@ -90,6 +90,9 @@ export const CSS = `
   transition: fill 140ms linear, r 140ms var(--timelin-ease-quick);
 }
 .timelin-event-dot.is-hovered { fill: var(--timelin-brass); }
+/* Emphasised events (e.g. pivotal/igniting) — a bright ring that stands out. */
+.timelin-event-dot.is-emphasis { stroke: var(--timelin-ink-bright); stroke-width: 1.5; }
+.timelin-event-span.is-emphasis { stroke: var(--timelin-ink-bright); stroke-width: 1.5; }
 .timelin-event-hit { fill: transparent; cursor: pointer; }
 
 /* SWIMLANES + GUTTER ------------------------------------------------------ */

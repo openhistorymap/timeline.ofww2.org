@@ -39,10 +39,16 @@ const PALETTE = [
   'oklch(0.70 0.12 200)',
 ];
 const CAP = 14;
+/** Bright gold for the war's igniting / casus-belli events, so they stand out. */
+const CAUSE_COLOR = 'oklch(0.85 0.15 90)';
 
 function eventCountry(e: TimelineEvent): string | undefined {
   const d = e.data as { country?: string } | undefined;
   return d?.country || undefined;
+}
+
+function isCause(e: TimelineEvent): boolean {
+  return (e.data as { cause?: boolean } | undefined)?.cause === true;
 }
 
 interface WdInfo {
@@ -141,11 +147,17 @@ export function mountWar(root: HTMLElement, cfg: WarConfig, dataUrl = 'events.js
     const colors = new Map(order.map((k, i) => [k, PALETTE[i % PALETTE.length]]));
 
     const groups: TimelineGroup[] = order.map((k, i) => ({ id: k, label: k, color: colors.get(k), order: i }));
-    const tagged = events.map((e) => ({ ...e, group: labelOf(e), color: colors.get(labelOf(e)) }));
+    const tagged = events.map((e) =>
+      isCause(e)
+        ? { ...e, group: labelOf(e), color: CAUSE_COLOR, emphasis: true }
+        : { ...e, group: labelOf(e), color: colors.get(labelOf(e)) },
+    );
     tl.setGroups(groups);
     tl.setEvents(tagged);
     if (fit) tl.setView(cfg.range[0], cfg.range[1]);
-    statusEl.textContent = `${events.length} events · ${groups.length} lanes`;
+    const causes = events.filter(isCause).length;
+    statusEl.textContent =
+      `${events.length} events · ${groups.length} lanes` + (causes ? ` · ${causes} casus belli` : '');
   }
 
   segBtns.forEach((b) =>
