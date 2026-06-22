@@ -22,7 +22,10 @@ UA = "OpenHistoryMap-war-timeline/1.0 (https://github.com/openhistorymap)"
 
 def query(war):
     return f"""SELECT ?item ?itemLabel ?itemDescription ?date ?endDate ?classLabel ?countryLabel WHERE {{
-  ?item wdt:P361 wd:{war} .
+  {{ ?item wdt:P361 wd:{war} . }}                 # part of the war
+  UNION {{ wd:{war} wdt:P828 ?item . }}           # the war's causes
+  UNION {{ wd:{war} wdt:P1478 ?item . }}          # the war's immediate cause
+  UNION {{ ?item wdt:P1542 wd:{war} . }}          # events whose effect is the war
   ?item wdt:P31 ?class .
   OPTIONAL {{ ?item wdt:P585 ?pit. }}
   OPTIONAL {{ ?item wdt:P580 ?st. }}
