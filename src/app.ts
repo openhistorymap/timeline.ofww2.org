@@ -16,7 +16,10 @@ export interface WarConfig {
   key: string;
   title: string;
   subtitle: string;
+  /** Initial visible range. */
   range: [number, number];
+  /** Hard pan/zoom bounds — the view can't leave this window. */
+  extent: [number, number];
 }
 
 type GroupMode = 'type' | 'country';
@@ -112,6 +115,7 @@ export function mountWar(root: HTMLElement, cfg: WarConfig, dataUrl = 'events.js
     eras: [],
     view: { start: cfg.range[0], end: cfg.range[1] },
     year: (cfg.range[0] + cfg.range[1]) / 2,
+    extent: cfg.extent,
     maxHeight: stage.clientHeight || 420,
     groupGutter: 150,
   });
