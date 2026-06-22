@@ -59,7 +59,12 @@ a:hover { text-decoration: underline; }
 .ww-status {
   flex: 0 0 auto; border-top: 1px solid var(--hairline); padding: 9px 22px;
   font-size: 13px; color: var(--ink-soft);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
+.ww-credit { font-style: italic; letter-spacing: 0.02em; white-space: nowrap; }
+.ww-credit a { color: var(--ink-soft); }
+.ww-credit a:hover { color: var(--brass); }
+.ww-heart { color: var(--brass); font-style: normal; }
 
 /* detail panel */
 .ww-detail {
@@ -78,6 +83,8 @@ a:hover { text-decoration: underline; }
 .ww-close:hover { border-color: var(--brass); color: var(--brass); }
 .ww-d-year { font-style: italic; font-weight: 500; font-size: 15px; color: var(--brass); }
 .ww-d-title { font-family: var(--font-display); font-weight: 400; font-size: 21px; line-height: 1.15; color: var(--ink-bright); margin: 4px 30px 8px 0; }
+.ww-d-titlelink { color: var(--ink-bright); }
+.ww-d-titlelink:hover { color: var(--brass); text-decoration: none; }
 .ww-d-kind { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); border: 1px solid var(--hairline); padding: 1px 8px; }
 .ww-d-body { margin-top: 14px; font-size: 14px; line-height: 1.5; color: var(--ink); }
 .ww-d-img { display: block; width: 100%; max-height: 220px; object-fit: cover; border: 1px solid var(--hairline); margin-bottom: 12px; }

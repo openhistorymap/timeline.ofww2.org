@@ -103,13 +103,17 @@ export function mountWar(root: HTMLElement, cfg: WarConfig, dataUrl = 'events.js
     </header>
     <main class="ww-main">
       <div class="ww-stage"><div class="ww-tl"></div></div>
-      <div class="ww-status"></div>
+      <footer class="ww-status">
+        <span class="ww-status-text"></span>
+        <span class="ww-credit">made with <span class="ww-heart">♥</span> by
+          <a href="https://www.openhistorymap.org" target="_blank" rel="noopener">OpenHistoryMap</a></span>
+      </footer>
     </main>
     <aside class="ww-detail" hidden></aside>`;
 
   const stage = root.querySelector('.ww-stage') as HTMLElement;
   const tlHost = root.querySelector('.ww-tl') as HTMLElement;
-  const statusEl = root.querySelector('.ww-status') as HTMLElement;
+  const statusEl = root.querySelector('.ww-status-text') as HTMLElement;
   const detail = root.querySelector('.ww-detail') as HTMLElement;
   const playBtn = root.querySelector('.ww-play') as HTMLButtonElement;
   const segBtns = Array.from(root.querySelectorAll('.ww-seg button')) as HTMLButtonElement[];
@@ -189,28 +193,36 @@ export function mountWar(root: HTMLElement, cfg: WarConfig, dataUrl = 'events.js
     const token = ++infoToken;
     const qid = qidFromUrl(e.url);
     detail.hidden = false;
+    // The title is itself a link: straight to Wikidata now, upgraded to the
+    // Wikipedia article once we resolve the sitelink below.
     detail.innerHTML = `
       <button class="ww-close" aria-label="Close">✕</button>
       <span class="ww-d-year">${formatYearRange(e.year, e.endYear)}</span>
-      <h2 class="ww-d-title">${escapeHtml(e.title)}</h2>
+      <h2 class="ww-d-title">${
+        e.url
+          ? `<a class="ww-d-titlelink" href="${e.url}" target="_blank" rel="noopener">${escapeHtml(e.title)} ↗</a>`
+          : escapeHtml(e.title)
+      }</h2>
       ${e.description ? `<span class="ww-d-kind">${escapeHtml(e.description)}</span>` : ''}
-      <div class="ww-d-body"><span class="ww-spin"></span> looking up Wikidata…</div>`;
+      <div class="ww-d-body"><span class="ww-spin"></span> looking up Wikipedia…</div>`;
     (detail.querySelector('.ww-close') as HTMLElement).addEventListener('click', () => (detail.hidden = true));
+    const titleLink = detail.querySelector('.ww-d-titlelink') as HTMLAnchorElement | null;
     if (!qid) {
       (detail.querySelector('.ww-d-body') as HTMLElement).innerHTML = e.url
-        ? `<a href="${e.url}" target="_blank" rel="noopener">Source ↗</a>`
+        ? `<a class="primary" href="${e.url}" target="_blank" rel="noopener">Open source ↗</a>`
         : '<span class="ww-muted">No linked Wikidata record.</span>';
       return;
     }
     fetchInfo(qid)
       .then((info) => {
         if (token !== infoToken) return;
+        if (titleLink && info.wikipedia) titleLink.href = info.wikipedia; // prefer Wikipedia
         const body = detail.querySelector('.ww-d-body') as HTMLElement;
         body.innerHTML = `
           ${info.image ? `<img class="ww-d-img" src="${info.image}" alt="" loading="lazy" />` : ''}
           ${info.description ? `<p class="ww-d-desc">${escapeHtml(info.description)}</p>` : ''}
           <div class="ww-d-links">
-            ${info.wikipedia ? `<a class="primary" href="${info.wikipedia}" target="_blank" rel="noopener">Wikipedia ↗</a>` : ''}
+            ${info.wikipedia ? `<a class="primary" href="${info.wikipedia}" target="_blank" rel="noopener">Read on Wikipedia ↗</a>` : ''}
             <a href="${info.wikidataUrl}" target="_blank" rel="noopener">Wikidata ↗</a>
           </div>`;
       })
