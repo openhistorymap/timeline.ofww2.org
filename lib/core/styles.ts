@@ -146,14 +146,17 @@ export const CSS = `
 .timelin-era-hit { fill: transparent; cursor: pointer; }
 
 /* CURSOR ------------------------------------------------------------------ */
+.timelin-cursor { pointer-events: none; } /* never block clicks on events beneath it */
 .timelin-cursor-line {
   stroke: var(--timelin-brass);
   stroke-width: 1.25;
   shape-rendering: crispEdges;
+  pointer-events: none;
 }
 .timelin-cursor-cap, .timelin-cursor-base {
   fill: var(--timelin-brass);
   stroke: none;
+  pointer-events: none;
 }
 
 .timelin-readout {

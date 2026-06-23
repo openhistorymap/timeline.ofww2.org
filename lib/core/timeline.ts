@@ -699,13 +699,10 @@ export class Timeline {
         width: 18,
         height: lineBottom - top + 6,
         class: 'timelin-era-hit',
+        'data-era': String(i), // resolved on click in onPointerUp
       });
       hit.addEventListener('mouseenter', () => this.showEraTooltip(i, x));
       hit.addEventListener('mouseleave', () => this.hideTooltip());
-      hit.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        this.activateEra(i);
-      });
       this.gEras.append(hit);
     });
   }
@@ -805,14 +802,11 @@ export class Timeline {
       width: hitW,
       height: EVENT_H + 4,
       class: 'timelin-event-hit',
+      'data-ev': ev.id, // resolved on click in onPointerUp (pointer capture eats hit clicks)
     });
     const cx = (Math.max(plotLeft, x0) + Math.min(this.width, x1)) / 2;
     hit.addEventListener('mouseenter', () => this.showEventTooltip(ev, cx, anchorY));
     hit.addEventListener('mouseleave', () => this.hideTooltip());
-    hit.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.activateEvent(ev);
-    });
     this.gEvents.append(hit);
   }
 
@@ -1066,12 +1060,28 @@ export class Timeline {
     }
     if (!this.dragging) return;
     this.dragging = false;
-    if (!this.dragMoved) {
-      const y = this.yearAt(this.localX(ev));
-      this.cursorYear = y;
-      this.renderCursor();
-      this.emit('yearChange', y);
+    if (this.dragMoved) return;
+
+    // Pointer capture routes the click to the SVG, so hit-rect click handlers
+    // never fire — resolve what was clicked here instead.
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const evId = el?.getAttribute('data-ev');
+    if (evId) {
+      const event = this.events.find((e) => e.id === evId);
+      if (event) {
+        this.activateEvent(event);
+        return;
+      }
     }
+    const eraI = el?.getAttribute('data-era');
+    if (eraI != null) {
+      this.activateEra(parseInt(eraI, 10));
+      return;
+    }
+    const y = this.yearAt(this.localX(ev));
+    this.cursorYear = y;
+    this.renderCursor();
+    this.emit('yearChange', y);
   };
 
   private onWheel = (ev: WheelEvent) => {
