@@ -6,5 +6,6 @@ mountWar(document.getElementById('app')!, {
   title: 'Timeline of the Second World War',
   subtitle: '1939–1945 · events drawn from Wikidata',
   range: [1939, 1946],
-  extent: [1935, 1950],
+  // Wide enough to scroll back to the war's root cause, the Treaty of Versailles (1919).
+  extent: [1918, 1950],
 });
