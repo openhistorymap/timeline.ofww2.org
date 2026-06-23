@@ -161,7 +161,7 @@ export function mountWar(root: HTMLElement, cfg: WarConfig, dataUrl = 'events.js
     if (fit) tl.setView(cfg.range[0], cfg.range[1]);
     const causes = events.filter(isCause).length;
     statusEl.textContent =
-      `${events.length} events · ${groups.length} lanes` + (causes ? ` · ${causes} casus belli` : '');
+      `${events.length} events · ${groups.length} lanes` + (causes ? ` · ${causes} key events` : '');
   }
 
   segBtns.forEach((b) =>

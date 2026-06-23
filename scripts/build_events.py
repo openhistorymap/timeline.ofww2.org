@@ -19,6 +19,14 @@ WAR = "Q362"  # World War II
 WDQS = "https://query.wikidata.org/sparql"
 UA = "OpenHistoryMap-war-timeline/1.0 (https://github.com/openhistorymap)"
 
+# Curated key events that aren't reachable by the generic query (no direct edge
+# to the war). Treated as "key" events (emphasised, like the causes). For WWI the
+# closing peace treaties: the generic war↔treaty link doesn't exist in Wikidata.
+SEED = {
+    "Q361": ["Q8736", "Q192924", "Q269267"],  # Versailles, Saint-Germain, Neuilly (1919)
+    "Q362": [],
+}
+
 
 def query(war):
     return f"""SELECT ?item ?itemLabel ?itemDescription ?date ?endDate ?classLabel ?countryLabel WHERE {{
@@ -62,6 +70,22 @@ def causes_query(war):
 }}"""
 
 
+def seed_query(qids):
+    values = " ".join("wd:" + q for q in qids)
+    return f"""SELECT ?item ?itemLabel ?itemDescription ?date ?endDate ?classLabel ?countryLabel WHERE {{
+  VALUES ?item {{ {values} }}
+  ?item wdt:P31 ?class .
+  OPTIONAL {{ ?item wdt:P585 ?pit. }}
+  OPTIONAL {{ ?item wdt:P580 ?st. }}
+  OPTIONAL {{ ?item wdt:P582 ?et. }}
+  BIND(COALESCE(?pit, ?st) AS ?date)
+  BIND(?et AS ?endDate)
+  FILTER(BOUND(?date))
+  OPTIONAL {{ ?item wdt:P17 ?country. }}
+  SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
+}}"""
+
+
 def fetch(q):
     url = WDQS + "?" + urllib.parse.urlencode({"query": q, "format": "json"})
     req = urllib.request.Request(url, headers={"Accept": "application/sparql-results+json", "User-Agent": UA})
@@ -70,8 +94,11 @@ def fetch(q):
 
 
 def run(war):
-    bindings = fetch(query(war))
+    seeds = SEED.get(war, [])
+    bindings = fetch(query(war)) + (fetch(seed_query(seeds)) if seeds else [])
+    # Causes (auto-detected) and curated seeds are both "key" events → emphasised.
     cause_ids = {(b.get("item") or {}).get("value", "").rsplit("/", 1)[-1] for b in fetch(causes_query(war))}
+    cause_ids |= set(seeds)
     out, seen = [], set()
     for b in bindings:
         uri = (b.get("item") or {}).get("value", "")
